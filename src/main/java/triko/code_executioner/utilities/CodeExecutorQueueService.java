@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import triko.code_executioner.dto.requests.HydratedCodeExecutionRequest;
+import triko.code_executioner.dto.requests.SaveTestCaseFileRequest;
 
 @Service
 public class CodeExecutorQueueService {
@@ -25,13 +26,20 @@ public class CodeExecutorQueueService {
 		this.jsonConverterService = jsonConverterService;
 	}
 	
-	public void sendToQueue(HydratedCodeExecutionRequest message) {
+	public void sendCodeExecutionMessageToQueue(HydratedCodeExecutionRequest message) {
 		logger.info("Sent message to rabbitmq: " + message);
 		rabbitTemplate.convertAndSend(exchangeName, routingKey, jsonConverterService.convert(message));
+	}
+	
+	public void sendSaveTestCaseMessageToQueue(SaveTestCaseFileRequest request) {
+		rabbitTemplate.convertAndSend(exchangeName, routingKey, jsonConverterService.convert(request));
 	}
 	
 	@RabbitListener(queues = "${spring.rabbitmq.exchange-name}")
 	public void receiveMessageFromQueue(String message) {
 		logger.info("Received message from rabbitmq: " + message);
+		if (message.equals("Service started")) {
+			rabbitTemplate.convertAndSend(exchangeName, routingKey, "Handshake");
+		}
 	}
 }

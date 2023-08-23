@@ -1,4 +1,4 @@
-package triko.code_executioner.configs.security;
+package triko.code_executioner.configs;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

@@ -1,4 +1,4 @@
-package triko.code_executioner.configs.security;
+package triko.code_executioner.configs;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

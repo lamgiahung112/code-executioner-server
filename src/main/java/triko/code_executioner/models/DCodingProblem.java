@@ -24,7 +24,7 @@ public record DCodingProblem(
 		List<String> tags,
 		@JsonIgnore String testcasePath
 ) {
-	public static DCodingProblem fromCreateProblemRequest(CreateCodingProblemRequest request, String testcasePath) {
+	public static DCodingProblem fromCreateProblemRequest(CreateCodingProblemRequest request) {
 		return new DCodingProblem(
 				null, 
 				request.title(), 
@@ -33,7 +33,7 @@ public record DCodingProblem(
 				request.difficulty(), 
 				0, 0, 0, 0, 
 				request.tags(),
-				testcasePath
+				""
 		);
 	}
 }

@@ -1,4 +1,4 @@
-package triko.code_executioner.configs.security;
+package triko.code_executioner.configs;
 
 import java.security.Key;
 import java.util.ArrayList;

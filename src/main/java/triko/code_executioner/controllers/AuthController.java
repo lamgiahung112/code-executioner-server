@@ -13,14 +13,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import lombok.AllArgsConstructor;
 import reactor.core.publisher.Mono;
-import triko.code_executioner.configs.security.JwtUtils;
+import triko.code_executioner.configs.JwtUtils;
 import triko.code_executioner.dto.base.TestCase;
 import triko.code_executioner.dto.requests.SignInRequest;
 import triko.code_executioner.dto.requests.SignUpRequest;
 import triko.code_executioner.dto.responses.ApiResponse;
 import triko.code_executioner.dto.responses.SignInResult;
 import triko.code_executioner.models.DUser;
-import triko.code_executioner.services.interfaces.FileSystemServiceInterface;
 import triko.code_executioner.services.interfaces.UserServiceInterface;
 
 @AllArgsConstructor
@@ -28,7 +27,6 @@ import triko.code_executioner.services.interfaces.UserServiceInterface;
 @RequestMapping("/auth")
 public class AuthController {
 	private final UserServiceInterface userService;
-	private final FileSystemServiceInterface fileSystemService;
 	private final JwtUtils jwtUtils;
 	private final BCryptPasswordEncoder passwordEncoder;
 
