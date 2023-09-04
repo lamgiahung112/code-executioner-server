@@ -41,5 +41,7 @@ public class CodeExecutorQueueService {
 		if (message.equals("Service started")) {
 			rabbitTemplate.convertAndSend(exchangeName, routingKey, "Handshake");
 		}
+		
+		
 	}
 }

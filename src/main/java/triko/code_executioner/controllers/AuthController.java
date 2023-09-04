@@ -1,7 +1,5 @@
 package triko.code_executioner.controllers;
 
-import java.util.ArrayList;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -14,7 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 import lombok.AllArgsConstructor;
 import reactor.core.publisher.Mono;
 import triko.code_executioner.configs.JwtUtils;
-import triko.code_executioner.dto.base.TestCase;
 import triko.code_executioner.dto.requests.SignInRequest;
 import triko.code_executioner.dto.requests.SignUpRequest;
 import triko.code_executioner.dto.responses.ApiResponse;
@@ -31,7 +28,6 @@ public class AuthController {
 	private final BCryptPasswordEncoder passwordEncoder;
 
 	@PostMapping("/signup")
-	@SuppressWarnings("unchecked")
 	public Mono<ResponseEntity<ApiResponse<DUser>>> signupUser(@RequestBody SignUpRequest signupData) {
 		ApiResponse<DUser> response = new ApiResponse<>();
 
