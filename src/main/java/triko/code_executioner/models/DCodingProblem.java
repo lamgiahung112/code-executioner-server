@@ -36,4 +36,15 @@ public record DCodingProblem(
 				""
 		);
 	}
+	
+	public DCodingProblem withTestCasePath(String path) {
+		return new DCodingProblem(
+				this.id, 
+				this.title,
+				this.description, 
+				this.constraints, 
+				this.difficulty, 
+				this.likeCount, this.dislikeCount, this.submissionCount, this.acceptanceCount, 
+				this.tags, path);
+	}
 }

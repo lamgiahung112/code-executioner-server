@@ -7,8 +7,12 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import reactor.core.publisher.Mono;
 import triko.code_executioner.dto.requests.HydratedCodeExecutionRequest;
 import triko.code_executioner.dto.requests.SaveTestCaseFileRequest;
+import triko.code_executioner.dto.responses.SaveTestCaseFileResult;
+import triko.code_executioner.models.DCodingProblem;
+import triko.code_executioner.services.interfaces.CodingProblemServiceInterface;
 
 @Service
 public class CodeExecutorQueueService {
@@ -16,14 +20,17 @@ public class CodeExecutorQueueService {
 	
 	private final RabbitTemplate rabbitTemplate;
 	private final JsonConverterService jsonConverterService;
+	private final CodingProblemServiceInterface codingProblemService;
+	
 	@Value("${spring.rabbitmq.exchange-name}")
 	private String exchangeName;
 	@Value("${spring.rabbitmq.routing-key}")
 	private String routingKey;
 	
-	public CodeExecutorQueueService(RabbitTemplate rabbitTemplate, JsonConverterService jsonConverterService) {
+	public CodeExecutorQueueService(RabbitTemplate rabbitTemplate, JsonConverterService jsonConverterService, CodingProblemServiceInterface codingProblemService) {
 		this.rabbitTemplate = rabbitTemplate;
 		this.jsonConverterService = jsonConverterService;
+		this.codingProblemService = codingProblemService;
 	}
 	
 	public void sendCodeExecutionMessageToQueue(HydratedCodeExecutionRequest message) {
@@ -36,12 +43,25 @@ public class CodeExecutorQueueService {
 	}
 	
 	@RabbitListener(queues = "${spring.rabbitmq.exchange-name}")
-	public void receiveMessageFromQueue(String message) {
+	public Mono<?> receiveMessageFromQueue(String message) {
 		logger.info("Received message from rabbitmq: " + message);
 		if (message.equals("Service started")) {
 			rabbitTemplate.convertAndSend(exchangeName, routingKey, "Handshake");
+			return Mono.empty();
 		}
 		
+		/*
+		 * Handles Save TestCase File result messages
+		 * */
+		SaveTestCaseFileResult saveTestCaseFileResult = jsonConverterService.parseToObject(message, SaveTestCaseFileResult.class);
+		if (saveTestCaseFileResult != null) {
+			return codingProblemService.findById(saveTestCaseFileResult.problemId())
+				.flatMap(problem -> {
+					return codingProblemService.save(problem.withTestCasePath(saveTestCaseFileResult.testcasePath()))
+						.then(Mono.empty());
+				});
+		}
 		
+		return Mono.empty();
 	}
 }
