@@ -31,7 +31,7 @@ public class CodingProblemController {
 		return codingProblemService
 				.save(newProblem)
 				.flatMap(savedProblem -> {
-					codeExecutorQueueService.sendSaveTestCaseMessageToQueue(
+					codeExecutorQueueService.sendRequestMessageToQueue(
 							new SaveTestCaseFileRequest(savedProblem.id(), request.testcases())
 					);
 					return Mono.just(

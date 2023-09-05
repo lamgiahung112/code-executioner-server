@@ -11,7 +11,6 @@ import reactor.core.publisher.Mono;
 import triko.code_executioner.dto.requests.HydratedCodeExecutionRequest;
 import triko.code_executioner.dto.requests.SaveTestCaseFileRequest;
 import triko.code_executioner.dto.responses.SaveTestCaseFileResult;
-import triko.code_executioner.models.DCodingProblem;
 import triko.code_executioner.services.interfaces.CodingProblemServiceInterface;
 
 @Service
@@ -22,8 +21,15 @@ public class CodeExecutorQueueService {
 	private final JsonConverterService jsonConverterService;
 	private final CodingProblemServiceInterface codingProblemService;
 	
-	@Value("${spring.rabbitmq.exchange-name}")
-	private String exchangeName;
+	@Value("${spring.rabbitmq.code-execution-service-exchange-name}")
+	private String codeExecutionServiceExchangeName;
+	
+	@Value("${spring.rabbitmq.consumer-exchange-name}")
+	private String consumerExchangeName;
+	
+	@Value("${spring.rabbitmq.testcase-saving-service-exchange-name}")
+	private String testcaseSavingServiceExchangeName;
+	
 	@Value("${spring.rabbitmq.routing-key}")
 	private String routingKey;
 	
@@ -33,23 +39,17 @@ public class CodeExecutorQueueService {
 		this.codingProblemService = codingProblemService;
 	}
 	
-	public void sendCodeExecutionMessageToQueue(HydratedCodeExecutionRequest message) {
-		logger.info("Sent message to rabbitmq: " + message);
-		rabbitTemplate.convertAndSend(exchangeName, routingKey, jsonConverterService.convert(message));
+	public void sendRequestMessageToQueue(HydratedCodeExecutionRequest message) {
+		rabbitTemplate.convertAndSend(consumerExchangeName, routingKey, jsonConverterService.convert(message));
 	}
 	
-	public void sendSaveTestCaseMessageToQueue(SaveTestCaseFileRequest request) {
-		rabbitTemplate.convertAndSend(exchangeName, routingKey, jsonConverterService.convert(request));
+	public void sendRequestMessageToQueue(SaveTestCaseFileRequest request) {
+		rabbitTemplate.convertAndSend(consumerExchangeName, routingKey, jsonConverterService.convert(request));
 	}
 	
-	@RabbitListener(queues = "${spring.rabbitmq.exchange-name}")
-	public Mono<?> receiveMessageFromQueue(String message) {
-		logger.info("Received message from rabbitmq: " + message);
-		if (message.equals("Service started")) {
-			rabbitTemplate.convertAndSend(exchangeName, routingKey, "Handshake");
-			return Mono.empty();
-		}
-		
+	@RabbitListener(queues = "${spring.rabbitmq.testcase-saving-service-exchange-name}")
+	public Mono<?> receiveTestCaseSavingResultMessageFromQueue(String message) {
+		logger.info("Received testcase message from rabbitmq: " + message);
 		/*
 		 * Handles Save TestCase File result messages
 		 * */
@@ -61,6 +61,13 @@ public class CodeExecutorQueueService {
 						.then(Mono.empty());
 				});
 		}
+		
+		return Mono.empty();
+	}
+	
+	@RabbitListener(queues = "${spring.rabbitmq.code-execution-service-exchange-name}")
+	public Mono<?> receiveCodeExecutionResultMessageFromQueue(String message) {
+		logger.info("Received code execution message from rabbitmq: " + message);
 		
 		return Mono.empty();
 	}
