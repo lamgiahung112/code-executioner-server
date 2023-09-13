@@ -1,14 +1,20 @@
 package triko.code_executioner.utilities;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.rabbitmq.client.Channel;
+
 import reactor.core.publisher.Mono;
-import triko.code_executioner.dto.requests.HydratedCodeExecutionRequest;
+import triko.code_executioner.dto.requests.CodeExecutionRequest;
 import triko.code_executioner.dto.requests.SaveTestCaseFileRequest;
 import triko.code_executioner.dto.responses.SaveTestCaseFileResult;
 import triko.code_executioner.services.interfaces.CodingProblemServiceInterface;
@@ -21,14 +27,8 @@ public class CodeExecutorQueueService {
 	private final JsonConverterService jsonConverterService;
 	private final CodingProblemServiceInterface codingProblemService;
 	
-	@Value("${spring.rabbitmq.code-execution-service-exchange-name}")
-	private String codeExecutionServiceExchangeName;
-	
 	@Value("${spring.rabbitmq.consumer-exchange-name}")
 	private String consumerExchangeName;
-	
-	@Value("${spring.rabbitmq.testcase-saving-service-exchange-name}")
-	private String testcaseSavingServiceExchangeName;
 	
 	@Value("${spring.rabbitmq.routing-key}")
 	private String routingKey;
@@ -39,7 +39,7 @@ public class CodeExecutorQueueService {
 		this.codingProblemService = codingProblemService;
 	}
 	
-	public void sendRequestMessageToQueue(HydratedCodeExecutionRequest message) {
+	public void sendRequestMessageToQueue(CodeExecutionRequest message) {
 		rabbitTemplate.convertAndSend(consumerExchangeName, routingKey, jsonConverterService.convert(message));
 	}
 	
@@ -47,13 +47,14 @@ public class CodeExecutorQueueService {
 		rabbitTemplate.convertAndSend(consumerExchangeName, routingKey, jsonConverterService.convert(request));
 	}
 	
-	@RabbitListener(queues = "${spring.rabbitmq.testcase-saving-service-exchange-name}")
-	public Mono<?> receiveTestCaseSavingResultMessageFromQueue(String message) {
-		logger.info("Received testcase message from rabbitmq: " + message);
+	@RabbitListener(queues = "${spring.rabbitmq.testcase-saving-service-exchange-name}", ackMode = "MANUAL")
+	public Mono<?> receiveTestCaseSavingResultMessageFromQueue(Message message, Channel channel) {
+		String testcaseData = new String(message.getBody(), StandardCharsets.UTF_8);
+		logger.info("Received testcase message from rabbitmq: " + testcaseData);
 		/*
 		 * Handles Save TestCase File result messages
 		 * */
-		SaveTestCaseFileResult saveTestCaseFileResult = jsonConverterService.parseToObject(message, SaveTestCaseFileResult.class);
+		SaveTestCaseFileResult saveTestCaseFileResult = jsonConverterService.parseToObject(testcaseData, SaveTestCaseFileResult.class);
 		if (saveTestCaseFileResult != null) {
 			return codingProblemService.findById(saveTestCaseFileResult.problemId())
 				.flatMap(problem -> {
@@ -62,13 +63,27 @@ public class CodeExecutorQueueService {
 				});
 		}
 		
+		// Acknowledging that server has received message
+		try {
+	        channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	    }
+		
 		return Mono.empty();
 	}
 	
 	@RabbitListener(queues = "${spring.rabbitmq.code-execution-service-exchange-name}")
-	public Mono<?> receiveCodeExecutionResultMessageFromQueue(String message) {
-		logger.info("Received code execution message from rabbitmq: " + message);
+	public Mono<?> receiveCodeExecutionResultMessageFromQueue(Message message, Channel channel) {
+		String codeExecutionResultData = new String(message.getBody(), StandardCharsets.UTF_8);
+		logger.info("Received code execution message from rabbitmq: " + codeExecutionResultData);
 		
+		// Acknowledging that server has received message
+		try {
+	        channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	    }
 		return Mono.empty();
 	}
 }
