@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,6 +28,7 @@ import triko.code_executioner.utilities.IsAuthenticated;
 import triko.code_executioner.utilities.IsProblemSetter;
 
 @RestController
+@CrossOrigin
 @RequestMapping("/problem")
 @AllArgsConstructor
 public class CodingProblemController {

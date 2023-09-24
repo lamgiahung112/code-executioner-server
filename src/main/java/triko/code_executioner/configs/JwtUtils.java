@@ -36,6 +36,10 @@ public class JwtUtils {
 	public String getIdFromToken(String token) {
 		return getAllClaimsFromToken(token).get("id", String.class);
 	}
+	
+	public String getNameFromToken(String token) {
+		return getAllClaimsFromToken(token).get("name", String.class);
+	}
 
     public String getUsernameFromToken(String token) {
         return getAllClaimsFromToken(token).getSubject();

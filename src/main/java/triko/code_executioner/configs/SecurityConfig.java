@@ -26,8 +26,7 @@ public class SecurityConfig {
         	.authenticationManager(authenticationManager)
         	.securityContextRepository(securityContextRepository)
             .authorizeExchange(exchanges -> exchanges
-            	.pathMatchers("/auth/signup").permitAll()
-            	.pathMatchers("/auth/signin").permitAll()
+            	.pathMatchers("/auth/**").permitAll()
                 .pathMatchers("/uploads/**").permitAll()
                 .pathMatchers("/static/**").permitAll()
                 .anyExchange().authenticated()

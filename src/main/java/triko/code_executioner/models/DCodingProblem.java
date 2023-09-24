@@ -12,40 +12,16 @@ import triko.code_executioner.models.enums.ProblemDifficulty;
 import triko.code_executioner.models.enums.ProblemTag;
 
 @Document
-public record DCodingProblem(
-		@Id String id,
-		String title,
-		String description,
-		List<String> constraints,
-		ProblemDifficulty difficulty,
-		int likeCount,
-		int dislikeCount,
-		int submissionCount,
-		int acceptanceCount,
-		List<ProblemTag> tags,
-		@JsonIgnore String testcasePath
-) {
+public record DCodingProblem(@Id String id, String title, String description, List<String> constraints,
+		ProblemDifficulty difficulty, int likeCount, int dislikeCount, int submissionCount, int acceptanceCount,
+		List<ProblemTag> tags, boolean isPending) {
 	public static DCodingProblem fromCreateProblemRequest(CreateCodingProblemRequest request) {
-		return new DCodingProblem(
-				null, 
-				request.title(), 
-				request.description(), 
-				request.constraints(), 
-				request.difficulty(), 
-				0, 0, 0, 0, 
-				request.tags(),
-				null
-		);
+		return new DCodingProblem(null, request.title(), request.description(), request.constraints(),
+				request.difficulty(), 0, 0, 0, 0, request.tags(), true);
 	}
-	
-	public DCodingProblem withTestCasePath(String path) {
-		return new DCodingProblem(
-				this.id, 
-				this.title,
-				this.description, 
-				this.constraints, 
-				this.difficulty, 
-				this.likeCount, this.dislikeCount, this.submissionCount, this.acceptanceCount, 
-				this.tags, path);
+
+	public DCodingProblem setReady() {
+		return new DCodingProblem(id, title, description, constraints, difficulty, likeCount, dislikeCount,
+				submissionCount, acceptanceCount, tags, true);
 	}
 }
