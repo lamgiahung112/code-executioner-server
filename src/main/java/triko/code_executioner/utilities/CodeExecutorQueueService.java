@@ -58,7 +58,8 @@ public class CodeExecutorQueueService {
 		if (saveTestCaseFileResult != null) {
 			return codingProblemService.findById(saveTestCaseFileResult.problemId())
 				.flatMap(problem -> {
-					return codingProblemService.save(problem.setReady())
+					problem.setPending(false);
+					return codingProblemService.save(problem)
 						.then(Mono.empty());
 				});
 		}

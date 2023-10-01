@@ -2,6 +2,8 @@ package triko.code_executioner.dto.requests;
 
 import java.util.List;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import triko.code_executioner.dto.base.TestCase;
 import triko.code_executioner.models.enums.ProblemDifficulty;
 import triko.code_executioner.models.enums.ProblemTag;
