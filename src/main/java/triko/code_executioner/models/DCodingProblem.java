@@ -26,10 +26,11 @@ public class DCodingProblem {
 	private int submissionCount;
 	private int acceptanceCount;
 	private List<ProblemTag> tags;
+	private List<DExampleTestCaseExplanation> exampleTestCaseExplanations;
 	private boolean isPending;
 
 	public static DCodingProblem fromCreateProblemRequest(CreateCodingProblemRequest request) {
 		return new DCodingProblem(null, request.title(), request.description(), request.constraints(),
-				request.difficulty(), 0, 0, 0, 0, request.tags(), true);
+				request.difficulty(), 0, 0, 0, 0, request.tags(), null,true);
 	}
 }

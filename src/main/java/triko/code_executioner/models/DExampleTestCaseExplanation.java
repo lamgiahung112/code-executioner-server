@@ -1,7 +1,7 @@
 package triko.code_executioner.models;
 
 public record DExampleTestCaseExplanation(
-		String imgPath,
+		String img,
 		String exampleTest,
 		String exampleResult
 ) {

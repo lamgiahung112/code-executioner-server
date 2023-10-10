@@ -23,23 +23,30 @@ public class FileSystemService implements FileSystemServiceInterface {
 	private ResourceLoader resourceLoader;
 	
 	@Override
-	public Mono<String> saveExampleTestCaseImage(FilePart file) {
+	public Mono<String> saveFile(FilePart file) {
 		try {
             String fileName = UUID.randomUUID().toString().replaceAll("-", "") + file.filename();
 
             // Define the path where you want to save the file
             Path filePath = Path.of(resourceLoader.getResource(STATIC_DIR).getFile().getAbsolutePath(), fileName);
 
-            // Create the directory if it doesn't exist
-            Files.createDirectories(filePath.getParent());
-
             // Transfer the file to the specified path
-            return file.transferTo(filePath.toFile()).then(Mono.just("/static/" + fileName));
+            return file.transferTo(filePath.toFile()).then(Mono.just(fileName));
         } catch (IOException e) {
             e.printStackTrace();
             return null;
         }
-        
+	}
+
+	@Override
+	public void deleteFile(String fileName) {
+		Path filePath;
+		try {
+			filePath = Path.of(resourceLoader.getResource(STATIC_DIR).getFile().getAbsolutePath(), fileName);
+			Files.delete(filePath);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 }

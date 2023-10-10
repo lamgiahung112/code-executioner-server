@@ -2,13 +2,17 @@ package triko.code_executioner.controllers;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestAttribute;
@@ -39,6 +43,7 @@ import triko.code_executioner.utilities.IsProblemSetter;
 @RequestMapping("/problem")
 @AllArgsConstructor
 public class CodingProblemController {
+	private final Logger logger = LoggerFactory.getLogger(CodingProblemController.class);
 	private final CodingProblemServiceInterface codingProblemService;
 	private final CodeExecutorQueueService codeExecutorQueueService;
 	private final JwtUtils jwtUtils;
@@ -47,24 +52,16 @@ public class CodingProblemController {
 	@PostMapping
 	@IsProblemSetter
 	public Mono<ResponseEntity<ApiResponse<DCodingProblem>>> createNewCodingProblem(
-			@RequestBody CreateCodingProblemRequest request) {
+			@ModelAttribute @Validated CreateCodingProblemRequest request) {
 		ApiResponse<DCodingProblem> res = new ApiResponse<>();
 
 		DCodingProblem newProblem = DCodingProblem.fromCreateProblemRequest(request);
 
 		return codingProblemService.save(newProblem).flatMap(savedProblem -> {
-			codeExecutorQueueService
-					.sendRequestMessageToQueue(new SaveTestCaseFileRequest(savedProblem.getId(), request.testcases()));
+//			codeExecutorQueueService
+//					.sendRequestMessageToQueue(new SaveTestCaseFileRequest(savedProblem.getId(), request.testcases()));
 			return Mono.just(ResponseEntity.ok().body(res.withPayload(savedProblem)));
 		});
-	}
-
-	@PostMapping(value = "/uploads")
-	@IsAuthenticated
-	public Mono<ResponseEntity<String>> uploadFile(@RequestPart("file") FilePart file) {
-		System.out.println(file.filename());
-		return fileSystemService.saveExampleTestCaseImage(file)
-				.flatMap(filePath -> Mono.just(ResponseEntity.ok().body(filePath)));
 	}
 
 	@GetMapping
