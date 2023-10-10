@@ -45,21 +45,14 @@ import triko.code_executioner.utilities.IsProblemSetter;
 public class CodingProblemController {
 	private final Logger logger = LoggerFactory.getLogger(CodingProblemController.class);
 	private final CodingProblemServiceInterface codingProblemService;
-	private final CodeExecutorQueueService codeExecutorQueueService;
 	private final JwtUtils jwtUtils;
-	private final FileSystemServiceInterface fileSystemService;
 
 	@PostMapping
 	@IsProblemSetter
 	public Mono<ResponseEntity<ApiResponse<DCodingProblem>>> createNewCodingProblem(
 			@ModelAttribute @Validated CreateCodingProblemRequest request) {
 		ApiResponse<DCodingProblem> res = new ApiResponse<>();
-
-		DCodingProblem newProblem = DCodingProblem.fromCreateProblemRequest(request);
-
-		return codingProblemService.save(newProblem).flatMap(savedProblem -> {
-//			codeExecutorQueueService
-//					.sendRequestMessageToQueue(new SaveTestCaseFileRequest(savedProblem.getId(), request.testcases()));
+		return codingProblemService.createNewCodingProblem(request).flatMap(savedProblem -> {
 			return Mono.just(ResponseEntity.ok().body(res.withPayload(savedProblem)));
 		});
 	}

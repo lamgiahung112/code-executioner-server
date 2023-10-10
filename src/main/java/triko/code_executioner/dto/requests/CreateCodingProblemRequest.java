@@ -2,10 +2,9 @@ package triko.code_executioner.dto.requests;
 
 import java.util.List;
 
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.codec.multipart.FilePart;
 
 import triko.code_executioner.dto.base.TestCase;
-import triko.code_executioner.models.DExampleTestCaseExplanation;
 import triko.code_executioner.models.enums.ProblemDifficulty;
 import triko.code_executioner.models.enums.ProblemTag;
 
@@ -15,8 +14,9 @@ public record CreateCodingProblemRequest(
 		List<String> constraints,
 		ProblemDifficulty difficulty,
 		List<ProblemTag> tags,
-		List<TestCase> testcases
-//		List<CreateCodingProblemTestCaseExplanationRequest> exampleTestcaseExplanation
+		List<TestCase> testcases,
+		List<TestCase> exampleTestcaseExplanation,
+		List<FilePart> exampleTestCaseImage
 ) {
 
 }
