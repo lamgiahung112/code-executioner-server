@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,11 +25,15 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import triko.code_executioner.configs.JwtUtils;
+import triko.code_executioner.dto.requests.CodingProblemFilterRequest;
 import triko.code_executioner.dto.requests.CreateCodingProblemRequest;
 import triko.code_executioner.dto.requests.SaveTestCaseFileRequest;
 import triko.code_executioner.dto.responses.ApiResponse;
+import triko.code_executioner.dto.responses.CodingProblemBasicInfoResponse;
 import triko.code_executioner.models.DCodingProblem;
 import triko.code_executioner.models.enums.ProblemDifficulty;
 import triko.code_executioner.models.enums.ProblemTag;
@@ -42,8 +47,8 @@ import triko.code_executioner.utilities.IsProblemSetter;
 @CrossOrigin
 @RequestMapping("/problem")
 @AllArgsConstructor
+@Slf4j
 public class CodingProblemController {
-	private final Logger logger = LoggerFactory.getLogger(CodingProblemController.class);
 	private final CodingProblemServiceInterface codingProblemService;
 	private final CodeExecutorQueueService codeExecutorQueueService;
 	private final JwtUtils jwtUtils;
@@ -52,29 +57,36 @@ public class CodingProblemController {
 	@PostMapping
 	@IsProblemSetter
 	public Mono<ResponseEntity<ApiResponse<DCodingProblem>>> createNewCodingProblem(
+			Authentication authentication,
 			@ModelAttribute @Validated CreateCodingProblemRequest request) {
 		ApiResponse<DCodingProblem> res = new ApiResponse<>();
-
+		log.info(authentication.getCredentials().toString());
 		DCodingProblem newProblem = DCodingProblem.fromCreateProblemRequest(request);
 
 		return codingProblemService.save(newProblem).flatMap(savedProblem -> {
-//			codeExecutorQueueService
-//					.sendRequestMessageToQueue(new SaveTestCaseFileRequest(savedProblem.getId(), request.testcases()));
+			codeExecutorQueueService
+					.sendRequestMessageToQueue(new SaveTestCaseFileRequest(savedProblem.getId(), request.testcases()));
 			return Mono.just(ResponseEntity.ok().body(res.withPayload(savedProblem)));
 		});
 	}
 
+	
 	@GetMapping
 	@IsAuthenticated
-	public Mono<ResponseEntity<ApiResponse<List<DCodingProblem>>>> getProblems(
-			@Header(name = HttpHeaders.AUTHORIZATION) String accessToken,
-			@PathVariable List<ProblemDifficulty> difficulty, @PathVariable Boolean isAccepted,
-			@PathVariable List<ProblemTag> tags, @PathVariable int page, @PathVariable int itemsPerPage) {
-		ApiResponse<List<DCodingProblem>> res = new ApiResponse<>();
+	public Mono<ResponseEntity<ApiResponse<Flux<CodingProblemBasicInfoResponse>>>> getProblemsByFilter(
+//				@Header(name = HttpHeaders.AUTHORIZATION) String accessToken,
+				@RequestParam CodingProblemFilterRequest filterRequest
+			) {
+		ApiResponse<Flux<CodingProblemBasicInfoResponse>> res = new ApiResponse<>();
 
-		String userId = jwtUtils.getIdFromToken(accessToken);
+//		String userId = jwtUtils.getIdFromToken(accessToken);
 
-		return Mono.just(ResponseEntity.ok().body(res));
+		return Mono.just(
+			ResponseEntity.ok()
+				.body(
+					res.withPayload(codingProblemService.getProblemsByFilter(filterRequest))
+				)
+		);
 	}
 
 }

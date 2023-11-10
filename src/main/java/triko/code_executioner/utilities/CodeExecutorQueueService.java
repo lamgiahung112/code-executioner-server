@@ -48,7 +48,7 @@ public class CodeExecutorQueueService {
 	}
 	
 	@RabbitListener(queues = "${spring.rabbitmq.testcase-saving-service-exchange-name}", ackMode = "MANUAL")
-	public Mono<?> receiveTestCaseSavingResultMessageFromQueue(Message message, Channel channel) {
+	public Mono<?> receiveTestCaseSavingResultMessageFromQueue(Message message, Channel channel) throws IOException {
 		String testcaseData = new String(message.getBody(), StandardCharsets.UTF_8);
 		logger.info("Received testcase message from rabbitmq: " + testcaseData);
 		/*
@@ -64,18 +64,12 @@ public class CodeExecutorQueueService {
 				});
 		}
 		
-		// Acknowledging that server has received message
-		try {
-	        channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
-	    } catch (IOException e) {
-	        e.printStackTrace();
-	    }
-		
+		channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
 		return Mono.empty();
 	}
 	
 	@RabbitListener(queues = "${spring.rabbitmq.code-execution-service-exchange-name}")
-	public Mono<?> receiveCodeExecutionResultMessageFromQueue(Message message, Channel channel) {
+	public Mono<?> receiveCodeExecutionResultMessageFromQueue(Message message, Channel channel) throws IOException {
 		String codeExecutionResultData = new String(message.getBody(), StandardCharsets.UTF_8);
 		logger.info("Received code execution message from rabbitmq: " + codeExecutionResultData);
 		
