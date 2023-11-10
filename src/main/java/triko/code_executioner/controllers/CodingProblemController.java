@@ -50,9 +50,7 @@ import triko.code_executioner.utilities.IsProblemSetter;
 @Slf4j
 public class CodingProblemController {
 	private final CodingProblemServiceInterface codingProblemService;
-	private final CodeExecutorQueueService codeExecutorQueueService;
 	private final JwtUtils jwtUtils;
-	private final FileSystemServiceInterface fileSystemService;
 
 	@PostMapping
 	@IsProblemSetter
@@ -60,12 +58,7 @@ public class CodingProblemController {
 			Authentication authentication,
 			@ModelAttribute @Validated CreateCodingProblemRequest request) {
 		ApiResponse<DCodingProblem> res = new ApiResponse<>();
-		log.info(authentication.getCredentials().toString());
-		DCodingProblem newProblem = DCodingProblem.fromCreateProblemRequest(request);
-
-		return codingProblemService.save(newProblem).flatMap(savedProblem -> {
-			codeExecutorQueueService
-					.sendRequestMessageToQueue(new SaveTestCaseFileRequest(savedProblem.getId(), request.testcases()));
+		return codingProblemService.createNewCodingProblem(request).flatMap(savedProblem -> {
 			return Mono.just(ResponseEntity.ok().body(res.withPayload(savedProblem)));
 		});
 	}

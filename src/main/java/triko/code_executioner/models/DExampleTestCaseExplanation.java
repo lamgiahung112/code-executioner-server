@@ -1,9 +1,16 @@
 package triko.code_executioner.models;
 
-public record DExampleTestCaseExplanation(
-		String img,
-		String exampleTest,
-		String exampleResult
-) {
+import lombok.Getter;
+import lombok.Setter;
+import triko.code_executioner.dto.base.TestCase;
 
+public class DExampleTestCaseExplanation extends TestCase {
+	@Getter
+	@Setter
+	private String imgPath;
+	
+	public DExampleTestCaseExplanation(String imgPath, String test, String expected) {
+		super(test, expected);
+		this.imgPath = imgPath;
+	}
 }

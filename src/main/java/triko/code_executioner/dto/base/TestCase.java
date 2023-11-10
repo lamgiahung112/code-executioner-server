@@ -1,5 +1,11 @@
 package triko.code_executioner.dto.base;
 
-public record TestCase(String test, String expected) {
+import lombok.AllArgsConstructor;
+import lombok.Data;
 
+@Data
+@AllArgsConstructor
+public class TestCase {
+	private String test;
+	private String expected;
 }

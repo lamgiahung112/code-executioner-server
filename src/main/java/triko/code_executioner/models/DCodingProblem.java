@@ -1,5 +1,6 @@
 package triko.code_executioner.models;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
@@ -7,12 +8,14 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import triko.code_executioner.dto.requests.CreateCodingProblemRequest;
 import triko.code_executioner.models.enums.ProblemDifficulty;
 import triko.code_executioner.models.enums.ProblemTag;
 
 @Document
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
 public class DCodingProblem {
 	@Id
@@ -28,9 +31,4 @@ public class DCodingProblem {
 	private List<ProblemTag> tags;
 	private List<DExampleTestCaseExplanation> exampleTestCaseExplanations;
 	private boolean isPending;
-
-	public static DCodingProblem fromCreateProblemRequest(CreateCodingProblemRequest request) {
-		return new DCodingProblem(null, request.title(), request.description(), request.constraints(),
-				request.difficulty(), 0, 0, 0, 0, request.tags(), null,true);
-	}
 }
