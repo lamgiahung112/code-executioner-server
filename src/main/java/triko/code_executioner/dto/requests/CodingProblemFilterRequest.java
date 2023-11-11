@@ -15,4 +15,6 @@ public class CodingProblemFilterRequest {
 	private UserProblemProgress status;
 	private List<ProblemTag> tags;
 	private String search;
+	private int page;
+	private int pageSize;
 }

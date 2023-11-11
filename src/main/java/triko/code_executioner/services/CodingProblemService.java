@@ -3,6 +3,7 @@ package triko.code_executioner.services;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -10,25 +11,25 @@ import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Service;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import triko.code_executioner.dto.base.TestCase;
 import triko.code_executioner.dto.requests.CodingProblemFilterRequest;
 import triko.code_executioner.dto.requests.CreateCodingProblemRequest;
-import triko.code_executioner.dto.requests.SaveTestCaseFileRequest;
 import triko.code_executioner.dto.responses.CodingProblemBasicInfoResponse;
 import triko.code_executioner.models.DCodingProblem;
 import triko.code_executioner.models.DExampleTestCaseExplanation;
 import triko.code_executioner.repositories.CodingProblemRepositoryInterface;
 import triko.code_executioner.services.interfaces.CodingProblemServiceInterface;
-import triko.code_executioner.utilities.CodeExecutorQueueService;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class CodingProblemService implements CodingProblemServiceInterface {
 	private final CodingProblemRepositoryInterface codingProblemRepository;
 	private final FileSystemService fileSystemService;
 	private final ReactiveMongoTemplate mongoTemplate;
-	private final CodeExecutorQueueService codeExecutorQueueService;
 
 	@Override
 	public Mono<DCodingProblem> findById(String id) {
@@ -51,7 +52,8 @@ public class CodingProblemService implements CodingProblemServiceInterface {
 	}
 
 	@Override
-	public Flux<CodingProblemBasicInfoResponse> getProblemsByFilter(CodingProblemFilterRequest filterRequest) {
+	public Mono<List<CodingProblemBasicInfoResponse>> getProblemsByFilter(CodingProblemFilterRequest filterRequest) {
+		PageRequest pageRequest = PageRequest.of(filterRequest.getPage(), filterRequest.getPageSize());
 		Criteria isNotPending = Criteria.where("isPending").is(false);
 		Criteria hasTheSameDifficulty = 
 				filterRequest.getDifficulty() != null 
@@ -71,7 +73,9 @@ public class CodingProblemService implements CodingProblemServiceInterface {
 				Aggregation.match(isNotPending),
 				Aggregation.match(hasTheSameDifficulty),
 				Aggregation.match(hasTheSameTags),
-				Aggregation.match(matchesSearch)
+				Aggregation.match(matchesSearch),
+				Aggregation.skip(pageRequest.getOffset()),
+				Aggregation.limit(pageRequest.getPageSize())
 		);
 	
         return mongoTemplate
@@ -86,7 +90,7 @@ public class CodingProblemService implements CodingProblemServiceInterface {
                 			.submissionCount(problem.getSubmissionCount())
                 			.acceptanceCount(problem.getAcceptanceCount())
                 			.build();
-                });
+                }).collectList();
 	}
 
 	@Override
@@ -104,26 +108,23 @@ public class CodingProblemService implements CodingProblemServiceInterface {
 		problem.setPending(true);
 		problem.setSubmissionCount(0);
 
-		List<DExampleTestCaseExplanation> testcaseExplanationList = new ArrayList<>();
-		for (int i = 0; i < request.exampleTestcaseExplanation().size(); i++) {
-			FilePart currentTestCaseImg = request.exampleTestCaseImage().get(i);
-			String currentTestCaseTest = request.exampleTestcaseExplanation().get(i).getTest();
-			String currentTestCaseExpected = request.exampleTestcaseExplanation().get(i).getExpected();
+		// Process exampleTestcaseExplanation and exampleTestCaseImage in a reactive way
+	    Flux<DExampleTestCaseExplanation> processedTestcases = Flux.range(0, request.exampleTestcaseExplanation().size())
+	            .flatMap(i -> {
+	                TestCase explanation = request.exampleTestcaseExplanation().get(i);
+	                FilePart currentTestCaseImg = request.exampleTestCaseImage().get(i);
 
-			fileSystemService.saveFile(currentTestCaseImg).flatMap(fileName -> {
-				testcaseExplanationList
-						.add(new DExampleTestCaseExplanation(fileName, currentTestCaseTest, currentTestCaseExpected));
-				return Mono.empty();
-			});
-		}
-		
-		problem.setExampleTestCaseExplanations(testcaseExplanationList);
+	                return fileSystemService.saveFile(currentTestCaseImg)
+	                        .map(fileName -> new DExampleTestCaseExplanation(fileName, explanation.getTest(), explanation.getExpected()));
+	            });
 
-		return save(problem).flatMap(createdProblem -> {
-			codeExecutorQueueService.sendRequestMessageToQueue(
-					new SaveTestCaseFileRequest(createdProblem.getId(), request.testcases()));
-			return Mono.just(createdProblem);
-		});
+	    // Set the exampleTestCaseExplanations property
+	    return processedTestcases.collectList()
+	            .map(testcaseExplanationList -> {
+	                problem.setExampleTestCaseExplanations(testcaseExplanationList);
+	                return problem;
+	            })
+	            .flatMap(this::save);
 	}
 
 }

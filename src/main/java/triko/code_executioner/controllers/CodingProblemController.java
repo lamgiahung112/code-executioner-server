@@ -50,36 +50,30 @@ import triko.code_executioner.utilities.IsProblemSetter;
 @Slf4j
 public class CodingProblemController {
 	private final CodingProblemServiceInterface codingProblemService;
+	private final CodeExecutorQueueService codeExecutorQueueService;
 	private final JwtUtils jwtUtils;
 
 	@PostMapping
-	@IsProblemSetter
-	public Mono<ResponseEntity<ApiResponse<DCodingProblem>>> createNewCodingProblem(
-			Authentication authentication,
+	@IsAuthenticated
+	public Mono<ResponseEntity<ApiResponse<DCodingProblem>>> createNewCodingProblem(Authentication authentication,
 			@ModelAttribute @Validated CreateCodingProblemRequest request) {
 		ApiResponse<DCodingProblem> res = new ApiResponse<>();
-		return codingProblemService.createNewCodingProblem(request).flatMap(savedProblem -> {
+		return codingProblemService.createNewCodingProblem(request).flatMap(createdProblem -> {
+			codeExecutorQueueService.sendRequestMessageToQueue(
+					new SaveTestCaseFileRequest(createdProblem.getId(), request.testcases()));
+			return Mono.just(createdProblem);
+		}).flatMap(savedProblem -> {
 			return Mono.just(ResponseEntity.ok().body(res.withPayload(savedProblem)));
 		});
 	}
 
-	
 	@GetMapping
 	@IsAuthenticated
-	public Mono<ResponseEntity<ApiResponse<Flux<CodingProblemBasicInfoResponse>>>> getProblemsByFilter(
-//				@Header(name = HttpHeaders.AUTHORIZATION) String accessToken,
-				@RequestParam CodingProblemFilterRequest filterRequest
-			) {
-		ApiResponse<Flux<CodingProblemBasicInfoResponse>> res = new ApiResponse<>();
-
-//		String userId = jwtUtils.getIdFromToken(accessToken);
-
-		return Mono.just(
-			ResponseEntity.ok()
-				.body(
-					res.withPayload(codingProblemService.getProblemsByFilter(filterRequest))
-				)
-		);
+	public Mono<ResponseEntity<ApiResponse<List<CodingProblemBasicInfoResponse>>>> getProblemsByFilter(
+	        @ModelAttribute CodingProblemFilterRequest filterRequest) {
+		ApiResponse<List<CodingProblemBasicInfoResponse>> res = new ApiResponse<>();
+		return codingProblemService.getProblemsByFilter(filterRequest)
+				.flatMap(problemList -> Mono.just(ResponseEntity.ok().body(res.withPayload(problemList))));
 	}
 
 }

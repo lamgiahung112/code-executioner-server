@@ -29,9 +29,9 @@ public class FileSystemService implements FileSystemServiceInterface {
 
             // Define the path where you want to save the file
             Path filePath = Path.of(resourceLoader.getResource(STATIC_DIR).getFile().getAbsolutePath(), fileName);
-
+            
             // Transfer the file to the specified path
-            return file.transferTo(filePath.toFile()).then(Mono.just(fileName));
+            return file.transferTo(filePath).thenReturn(fileName);
         } catch (IOException e) {
             e.printStackTrace();
             return null;
