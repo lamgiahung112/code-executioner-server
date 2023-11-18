@@ -2,6 +2,7 @@ package triko.code_executioner.configs;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
@@ -29,6 +30,7 @@ public class SecurityConfig {
             	.pathMatchers("/auth/**").permitAll()
                 .pathMatchers("/uploads/**").permitAll()
                 .pathMatchers("/static/**").permitAll()
+                .pathMatchers(HttpMethod.OPTIONS, "*").permitAll()
                 .anyExchange().authenticated()
             )
             .exceptionHandling((exchange) -> {
