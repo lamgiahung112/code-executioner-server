@@ -13,9 +13,11 @@ public record CreateCodingProblemRequest(
 		String description,
 		List<String> constraints,
 		ProblemDifficulty difficulty,
+		String defaultCodeDefinition,
 		List<ProblemTag> tags,
 		List<TestCase> testcases,
-		List<TestCase> exampleTestcaseExplanation,
+		List<TestCase> exampleTestcase,
+		List<String> exampleTestcaseExplanation,
 		List<FilePart> exampleTestCaseImage
 ) {
 

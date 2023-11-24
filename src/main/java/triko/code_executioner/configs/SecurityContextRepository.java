@@ -16,7 +16,7 @@ import reactor.core.publisher.Mono;
 @Component
 public class SecurityContextRepository implements ServerSecurityContextRepository {
 	private final AuthenticationManager authenticationManager;
-	
+
 	@Override
 	public Mono<Void> save(ServerWebExchange swe, SecurityContext sc) {
         throw new UnsupportedOperationException("Not supported yet.");
@@ -33,6 +33,6 @@ public class SecurityContextRepository implements ServerSecurityContextRepositor
 				}
 		);
 	}
-	
-	
+
+
 }

@@ -55,20 +55,20 @@ public class CodingProblemService implements CodingProblemServiceInterface {
 	public Mono<List<CodingProblemBasicInfoResponse>> getProblemsByFilter(CodingProblemFilterRequest filterRequest) {
 		PageRequest pageRequest = PageRequest.of(filterRequest.getPage(), filterRequest.getPageSize());
 		Criteria isNotPending = Criteria.where("isPending").is(false);
-		Criteria hasTheSameDifficulty = 
-				filterRequest.getDifficulty() != null 
-					? Criteria.where("difficulty").is(filterRequest.getDifficulty()) 
+		Criteria hasTheSameDifficulty =
+				filterRequest.getDifficulty() != null
+					? Criteria.where("difficulty").is(filterRequest.getDifficulty())
 					: new Criteria();
-		
+
 		Criteria hasTheSameTags =
 				filterRequest.getTags() != null
 					? Criteria.where("tags").in(filterRequest.getTags())
 					: new Criteria();
-		Criteria matchesSearch = 
+		Criteria matchesSearch =
 				filterRequest.getSearch() != null
 					? Criteria.where("title").regex(filterRequest.getSearch())
 					: new Criteria();
-		
+
 		Aggregation agg = Aggregation.newAggregation(
 				Aggregation.match(isNotPending),
 				Aggregation.match(hasTheSameDifficulty),
@@ -77,7 +77,7 @@ public class CodingProblemService implements CodingProblemServiceInterface {
 				Aggregation.skip(pageRequest.getOffset()),
 				Aggregation.limit(pageRequest.getPageSize())
 		);
-	
+
         return mongoTemplate
                 .aggregate(agg, "dCodingProblem", DCodingProblem.class)
                 .map(problem -> {
@@ -101,21 +101,27 @@ public class CodingProblemService implements CodingProblemServiceInterface {
 		problem.setDescription(request.description());
 		problem.setConstraints(request.constraints());
 		problem.setDifficulty(request.difficulty());
+		problem.setDefaultCodeDefinition(request.defaultCodeDefinition());
 		problem.setTags(request.tags());
 		problem.setAcceptanceCount(0);
 		problem.setDislikeCount(0);
 		problem.setLikeCount(0);
 		problem.setPending(true);
 		problem.setSubmissionCount(0);
-
+		
+		List<TestCase> exampleTestcases = request.exampleTestcase() != null ? request.exampleTestcase() : new ArrayList<>();
+		List<FilePart> exampleTestCaseImg = request.exampleTestCaseImage() != null ? request.exampleTestCaseImage() : new ArrayList<>();
+		List<String> explanations = request.exampleTestcaseExplanation() != null ? request.exampleTestcaseExplanation() : new ArrayList<>();
+		
 		// Process exampleTestcaseExplanation and exampleTestCaseImage in a reactive way
-	    Flux<DExampleTestCaseExplanation> processedTestcases = Flux.range(0, request.exampleTestcaseExplanation().size())
+	    Flux<DExampleTestCaseExplanation> processedTestcases = Flux.range(0, exampleTestcases.size())
 	            .flatMap(i -> {
-	                TestCase explanation = request.exampleTestcaseExplanation().get(i);
-	                FilePart currentTestCaseImg = request.exampleTestCaseImage().get(i);
+	                TestCase test = exampleTestcases.get(i);
+	                FilePart currentTestCaseImg = exampleTestCaseImg.size() > i ? exampleTestCaseImg.get(i) : null;
+	                String explanation = explanations.size() > i ? explanations.get(i) : null;
 
 	                return fileSystemService.saveFile(currentTestCaseImg)
-	                        .map(fileName -> new DExampleTestCaseExplanation(fileName, explanation.getTest(), explanation.getExpected()));
+	                        .map(fileName -> new DExampleTestCaseExplanation(fileName, explanation, test.getTest(), test.getExpected()));
 	            });
 
 	    // Set the exampleTestCaseExplanations property

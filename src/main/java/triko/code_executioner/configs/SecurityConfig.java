@@ -9,6 +9,9 @@ import org.springframework.security.config.annotation.web.reactive.EnableWebFlux
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
+import org.springframework.web.util.pattern.PathPatternParser;
 
 import lombok.AllArgsConstructor;
 import reactor.core.publisher.Mono;
@@ -20,7 +23,7 @@ import reactor.core.publisher.Mono;
 public class SecurityConfig {
 	private final AuthenticationManager authenticationManager;
 	private final SecurityContextRepository securityContextRepository;
-	
+
 	@Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         return http
@@ -30,13 +33,13 @@ public class SecurityConfig {
             	.pathMatchers("/auth/**").permitAll()
                 .pathMatchers("/uploads/**").permitAll()
                 .pathMatchers("/static/**").permitAll()
-                .pathMatchers(HttpMethod.OPTIONS, "*").permitAll()
+                .pathMatchers(HttpMethod.OPTIONS, "*/**").permitAll()
                 .anyExchange().authenticated()
             )
             .exceptionHandling((exchange) -> {
-            	exchange.authenticationEntryPoint((swe, e) -> 
+            	exchange.authenticationEntryPoint((swe, e) ->
             		Mono.fromRunnable(() -> swe.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED)));
-            	exchange.accessDeniedHandler((swe, e) -> 
+            	exchange.accessDeniedHandler((swe, e) ->
             		Mono.fromRunnable(() -> swe.getResponse().setStatusCode(HttpStatus.FORBIDDEN)));
             })
             .csrf().disable()
@@ -44,7 +47,7 @@ public class SecurityConfig {
             .httpBasic().disable()
             .build();
     }
-	
+
 	@Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder() {
         return new BCryptPasswordEncoder();

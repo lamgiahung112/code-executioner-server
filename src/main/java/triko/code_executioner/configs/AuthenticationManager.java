@@ -16,11 +16,11 @@ import reactor.core.publisher.Mono;
 @AllArgsConstructor
 public class AuthenticationManager implements ReactiveAuthenticationManager {
 	private final JwtUtils jwtUtils;
-	
+
 	@Override
 	public Mono<Authentication> authenticate(Authentication authentication) {
 		String authToken = authentication.getCredentials().toString();
-		
+
 		return Mono.just(jwtUtils.validateToken(authToken))
 				.filter(valid -> valid)
 				.switchIfEmpty(Mono.empty())
@@ -28,8 +28,8 @@ public class AuthenticationManager implements ReactiveAuthenticationManager {
 					ArrayList<String> roleMap = jwtUtils.getRolesFromToken(authToken);
 					String username = jwtUtils.getUsernameFromToken(authToken);
 					return new UsernamePasswordAuthenticationToken(
-							username, 
-							null, 
+							username,
+							null,
 							roleMap.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList())
 					);
 				});

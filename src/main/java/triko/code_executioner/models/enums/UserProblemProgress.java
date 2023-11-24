@@ -1,7 +1,7 @@
 package triko.code_executioner.models.enums;
 
 public enum UserProblemProgress {
-	TODO, 
-	SOLVED, 
+	TODO,
+	SOLVED,
 	ATTEMPTED
 }

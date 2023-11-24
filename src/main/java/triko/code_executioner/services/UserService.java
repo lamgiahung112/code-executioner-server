@@ -13,7 +13,7 @@ import triko.code_executioner.services.interfaces.UserServiceInterface;
 public class UserService implements UserServiceInterface {
 	private final UserRepositoryInterface userRepository;
 	private final BCryptPasswordEncoder bCryptPasswordEncoder;
-	
+
 	public UserService(UserRepositoryInterface userRepository, BCryptPasswordEncoder pwEncoder) {
 		this.userRepository = userRepository;
 		this.bCryptPasswordEncoder = pwEncoder;
@@ -31,11 +31,11 @@ public class UserService implements UserServiceInterface {
 
 	@Override
 	public Mono<DUser> save(DUser entry) {
-		DUser userWithHashedPassword 
+		DUser userWithHashedPassword
 			= new DUser(
-				entry.id(), 
-				entry.username(), 
-				bCryptPasswordEncoder.encode(entry.password()), 
+				entry.id(),
+				entry.username(),
+				bCryptPasswordEncoder.encode(entry.password()),
 				entry.name(),
 				entry.roles(),
 				entry.isEnabled()

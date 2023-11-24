@@ -1,6 +1,5 @@
 package triko.code_executioner.models;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
@@ -9,7 +8,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import triko.code_executioner.dto.requests.CreateCodingProblemRequest;
 import triko.code_executioner.models.enums.ProblemDifficulty;
 import triko.code_executioner.models.enums.ProblemTag;
 
@@ -24,6 +22,7 @@ public class DCodingProblem {
 	private String description;
 	private List<String> constraints;
 	private ProblemDifficulty difficulty;
+	private String defaultCodeDefinition;
 	private int likeCount;
 	private int dislikeCount;
 	private int submissionCount;

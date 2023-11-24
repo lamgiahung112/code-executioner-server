@@ -1,21 +1,24 @@
 package triko.code_executioner.models;
 
-import java.util.List;
-
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-import triko.code_executioner.models.enums.CodeLanguage;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
 import triko.code_executioner.models.enums.SubmissionStatus;
 
-public record DUserCodeSubmission(
-		@Id String id,
-		String userId,
-		String problemId,
-		String code,
-		CodeLanguage language,
-		List<SubmissionStatus> result,
-		SubmissionStatus status,
-		long createdAt
-) {
-
+@Data
+@Document
+@Builder
+@AllArgsConstructor
+public class DUserCodeSubmission {
+	@Id 
+	private String id;
+	private String userId;
+	private String problemId;
+	private String code;
+	private SubmissionStatus status;
+	private long submittedAt;
+	private long completedAt;
 }

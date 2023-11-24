@@ -12,13 +12,13 @@ import org.springframework.core.io.ResourceLoader;
 public class AppInitializer {
 	private final Logger logger = LoggerFactory.getLogger(AppInitializer.class);
 	private final String STATIC_DIR = "classpath:/static";
-	
+
 	private final ResourceLoader resourceLoader = new DefaultResourceLoader();
-	
+
 	public void init() {
 		initStaticFilePath();
 	}
-	
+
 	private void initStaticFilePath() {
 		try {
 			logger.info("Initializing Static File Path");

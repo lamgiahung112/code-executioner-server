@@ -1,7 +1,6 @@
 package triko.code_executioner.controllers;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import org.springframework.http.HttpHeaders;
@@ -27,7 +26,6 @@ import triko.code_executioner.dto.responses.SignInResult;
 import triko.code_executioner.dto.responses.VerifyUserResult;
 import triko.code_executioner.models.DUser;
 import triko.code_executioner.services.interfaces.UserServiceInterface;
-import triko.code_executioner.utilities.IsAuthenticated;
 
 @AllArgsConstructor
 @RestController
@@ -66,7 +64,7 @@ public class AuthController {
 	public Mono<ResponseEntity<ApiResponse<VerifyUserResult>>> verifyUser(
 			@RequestHeader(name = HttpHeaders.AUTHORIZATION) String bearerToken) {
 		ApiResponse<VerifyUserResult> response = new ApiResponse<>();
-		
+
 		// Remove Bearer prefix
 		String token = bearerToken.substring(7);
 

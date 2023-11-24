@@ -19,24 +19,24 @@ import triko.code_executioner.models.DUser;
 public class JwtUtils {
 	@Value("${auth.jwt.secret}")
 	private String secret;
-	
+
 	private final long EXP_TIME = 7 * 24 * 60 * 60 * 1000;
 
 	private Key key;
-	
+
 	@PostConstruct
 	public void init() {
 		this.key = Keys.hmacShaKeyFor(secret.getBytes());
 	}
-	
+
 	public Claims getAllClaimsFromToken(String token) {
         return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
     }
-	
+
 	public String getIdFromToken(String token) {
 		return getAllClaimsFromToken(token).get("id", String.class);
 	}
-	
+
 	public String getNameFromToken(String token) {
 		return getAllClaimsFromToken(token).get("name", String.class);
 	}
@@ -48,7 +48,7 @@ public class JwtUtils {
     public Date getExpirationDateFromToken(String token) {
         return getAllClaimsFromToken(token).getExpiration();
     }
-    
+
     @SuppressWarnings("unchecked")
     public ArrayList<String> getRolesFromToken(String token) {
     	return getAllClaimsFromToken(token).get("roles", ArrayList.class);
@@ -58,16 +58,16 @@ public class JwtUtils {
         final Date expiration = getExpirationDateFromToken(token);
         return expiration.before(new Date());
     }
-	
+
 	public String generateToken(DUser user) {
 		Date now = new Date();
 		Date expiration = new Date(now.getTime() + EXP_TIME);
-		Map<String, Object> claims = new HashMap<String, Object>();
+		Map<String, Object> claims = new HashMap<>();
 		claims.put("id", user.id());
 		claims.put("name", user.name());
 		claims.put("roles", user.roles());
-		
-		
+
+
 		return Jwts.builder()
 				.setSubject(user.username())
 				.addClaims(claims)
@@ -76,7 +76,7 @@ public class JwtUtils {
 				.signWith(key)
 				.compact();
 	}
-	
+
 	public Boolean validateToken(String token) {
         return !isTokenExpired(token);
     }
